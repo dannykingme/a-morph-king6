@@ -1,6 +1,7 @@
 package calculator
 
 import (
+	"calculator/internal/errors"
 	"math"
 	"testing"
 )
@@ -114,7 +115,7 @@ func TestDivide(t *testing.T) {
 				if err == nil {
 					t.Errorf("Divide(%v, %v) expected error, got nil", tt.a, tt.b)
 				}
-				if err != ErrDivisionByZero {
+				if err != errors.ErrDivisionByZero {
 					t.Errorf("Divide(%v, %v) expected ErrDivisionByZero, got %v", tt.a, tt.b, err)
 				}
 			} else {
