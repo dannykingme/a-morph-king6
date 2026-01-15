@@ -1,9 +1,6 @@
 package calculator
 
-import "errors"
-
-// ErrDivisionByZero is returned when attempting to divide by zero
-var ErrDivisionByZero = errors.New("Division by zero is not allowed!")
+import "calculator/internal/errors"
 
 // Add returns the sum of a and b
 func Add(a, b float64) float64 {
@@ -23,7 +20,7 @@ func Multiply(a, b float64) float64 {
 // Divide returns the quotient of a and b, or an error if b is zero
 func Divide(a, b float64) (float64, error) {
 	if b == 0 {
-		return 0, ErrDivisionByZero
+		return 0, errors.ErrDivisionByZero
 	}
 	return a / b, nil
 }

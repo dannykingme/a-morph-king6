@@ -1,7 +1,7 @@
 package input
 
 import (
-	"errors"
+	"calculator/internal/errors"
 	"strings"
 	"testing"
 )
@@ -54,61 +54,61 @@ func TestReadMenuChoice(t *testing.T) {
 			name:       "choice too low (0)",
 			input:      "0\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidChoice,
+			wantErr:    errors.ErrInvalidChoice,
 		},
 		{
 			name:       "choice too high (6)",
 			input:      "6\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidChoice,
+			wantErr:    errors.ErrInvalidChoice,
 		},
 		{
 			name:       "negative choice",
 			input:      "-1\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidChoice,
+			wantErr:    errors.ErrInvalidChoice,
 		},
 		{
 			name:       "very large number",
 			input:      "999\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidChoice,
+			wantErr:    errors.ErrInvalidChoice,
 		},
 		{
 			name:       "non-numeric input",
 			input:      "abc\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 		{
 			name:       "empty input",
 			input:      "\n",
 			wantChoice: 0,
-			wantErr:    ErrEmptyInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 		{
 			name:       "whitespace only",
 			input:      "   \n",
 			wantChoice: 0,
-			wantErr:    ErrEmptyInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 		{
 			name:       "decimal number",
 			input:      "2.5\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 		{
 			name:       "input with letters",
 			input:      "1a\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 		{
 			name:       "special characters",
 			input:      "!@#\n",
 			wantChoice: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidMenuInput,
 		},
 	}
 
@@ -124,7 +124,7 @@ func TestReadMenuChoice(t *testing.T) {
 			if tt.wantErr != nil {
 				if gotErr == nil {
 					t.Errorf("ReadMenuChoice() error = nil, want %v", tt.wantErr)
-				} else if !errors.Is(gotErr, tt.wantErr) {
+				} else if gotErr != tt.wantErr {
 					t.Errorf("ReadMenuChoice() error = %v, want %v", gotErr, tt.wantErr)
 				}
 			} else {
@@ -207,49 +207,49 @@ func TestReadNumber(t *testing.T) {
 			name:       "non-numeric input",
 			input:      "abc\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "empty input",
 			input:      "\n",
 			wantNumber: 0,
-			wantErr:    ErrEmptyInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "whitespace only",
 			input:      "   \n",
 			wantNumber: 0,
-			wantErr:    ErrEmptyInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "input with letters",
 			input:      "12.5abc\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "multiple decimal points",
 			input:      "1.2.3\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "special characters",
 			input:      "!@#$\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "just a minus sign",
 			input:      "-\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 		{
 			name:       "just a plus sign",
 			input:      "+\n",
 			wantNumber: 0,
-			wantErr:    ErrInvalidInput,
+			wantErr:    errors.ErrInvalidInput,
 		},
 	}
 
@@ -265,7 +265,7 @@ func TestReadNumber(t *testing.T) {
 			if tt.wantErr != nil {
 				if gotErr == nil {
 					t.Errorf("ReadNumber() error = nil, want %v", tt.wantErr)
-				} else if !errors.Is(gotErr, tt.wantErr) {
+				} else if gotErr != tt.wantErr {
 					t.Errorf("ReadNumber() error = %v, want %v", gotErr, tt.wantErr)
 				}
 			} else {
@@ -337,6 +337,45 @@ func TestReadNumberEdgeCases(t *testing.T) {
 		}
 		if num != 2.2250738585072014e-308 {
 			t.Errorf("ReadNumber() = %v, want min positive float64", num)
+		}
+	})
+}
+
+// TestErrorMessages verifies that error messages match the C++ implementation
+func TestErrorMessages(t *testing.T) {
+	t.Run("invalid menu input message", func(t *testing.T) {
+		reader := strings.NewReader("abc\n")
+		_, err := ReadMenuChoice(reader)
+		if err == nil {
+			t.Fatal("Expected error for non-numeric menu input, got nil")
+		}
+		expected := "Invalid input! Please enter a number between 1-5."
+		if err.Error() != expected {
+			t.Errorf("Error message = %q, want %q", err.Error(), expected)
+		}
+	})
+
+	t.Run("invalid choice message", func(t *testing.T) {
+		reader := strings.NewReader("10\n")
+		_, err := ReadMenuChoice(reader)
+		if err == nil {
+			t.Fatal("Expected error for out-of-range choice, got nil")
+		}
+		expected := "Invalid choice! Please select a number between 1-5."
+		if err.Error() != expected {
+			t.Errorf("Error message = %q, want %q", err.Error(), expected)
+		}
+	})
+
+	t.Run("invalid number input message", func(t *testing.T) {
+		reader := strings.NewReader("not-a-number\n")
+		_, err := ReadNumber(reader)
+		if err == nil {
+			t.Fatal("Expected error for non-numeric input, got nil")
+		}
+		expected := "Invalid input! Please enter a valid number."
+		if err.Error() != expected {
+			t.Errorf("Error message = %q, want %q", err.Error(), expected)
 		}
 	})
 }
